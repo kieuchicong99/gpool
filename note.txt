@@ -1,0 +1,4 @@
+// gpool address
+https://goerli.etherscan.io/address/0x8D7341D4889ec78990b7B7ad4FbdDC4B3AC516fA#code
+// gstake address
+https://goerli.etherscan.io/address/0x38425bcd52BD0fcfCbDBeeEE7643362bfa2aA253#code
