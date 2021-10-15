@@ -30,7 +30,7 @@ npx hardhat compile
 ### Deploy contract
 deploy on bsc testnet 
 ```bash
-npx hardhat run --network bsc_testnet scripts\deploy-testnet.js
+npx hardhat run --network bsc_testnet scripts\deploy-gstaker.js
 ```
 deploy on bsc mainnet 
 ```bash

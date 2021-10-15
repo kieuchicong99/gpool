@@ -21,10 +21,10 @@ contract GStakingManager is AccessControl {
     uint256 public SLIVER_RATE = 2;
     uint256 public GOLD_RATE = 3;
 
-    uint32 public constant CONDITION_AMOUNT = 1000; // 1000$
+    uint256 public constant CONDITION_AMOUNT = 1000; // 1000$
 
-    uint32 public constant CONDITION_SLIVER = 50 days;
-    uint32 public constant CONDITION_GOLD = 100 days;
+    uint256 public CONDITION_SLIVER = 300 ; //50 days;
+    uint256 public CONDITION_GOLD = 600 ;//100 days;
 
     IERC20 public assetToken;
     ISwapRouter public router;
@@ -46,9 +46,8 @@ contract GStakingManager is AccessControl {
 
     struct StakerInfo {
         uint256 stakingAmount;
-        uint32 stakingTime;
-        uint32 startStaking; // time start stake
-        uint32 lastUnStaking; // time last unstake
+        uint256 startStaking; // time start stake
+        uint256 lastUnStaking; // time last unstake
     }
 
     enum Rank {
@@ -68,7 +67,8 @@ contract GStakingManager is AccessControl {
     event CreatePoolEvent(uint256 _poolId, Pool pool);
     event GetRewardEvent(uint256 _amount);
     event UpdatePoolRewardEvent(uint256 _poolId, uint256 _amountReward);
-    event UpdatePoolTimeEvent(uint256 _poolId, uint32 _startTime, uint32 _endTime);
+    event UpdatePoolTimeEvent(uint256 _poolId, uint256 _startTime, uint256 _endTime);
+
     //
 
     constructor(
@@ -85,8 +85,18 @@ contract GStakingManager is AccessControl {
         _setupRole(ADMIN, admins[0]);
         _setupRole(ADMIN, admins[1]);
         _setupRole(ADMIN, admins[2]);
-        
+
+        // for test
+        _setupRole(ADMIN, msg.sender);
     }
+
+    // update condition for test
+    function updateCondition(uint256 condition_sliver, uint256 condition_gold) public {
+        CONDITION_GOLD = condition_gold;
+        CONDITION_SLIVER = condition_sliver;
+    }
+
+    //
 
     // address
     function setUp(
@@ -100,28 +110,37 @@ contract GStakingManager is AccessControl {
     }
 
     // for test
-    // set role 
+    // set role
     function setupRole(bytes32 _role, address _account) public {
         _setupRole(_role, _account);
     }
 
     // get staker info
-    function getStakerInfo(address _staker) public view returns(StakerInfo memory){
+    function getStakerInfo(address _staker) public view returns (StakerInfo memory) {
         return stakers[_staker];
     }
 
     // staker deposit
     function deposit(uint256 _amount) public {
         gpoolToken.safeTransferFrom(msg.sender, address(this), _amount);
+        if(stakers[msg.sender].stakingAmount == 0){
+            stakers[msg.sender].startStaking = block.timestamp;
+            stakers[msg.sender].lastUnStaking = block.timestamp;
+        }
         stakers[msg.sender].stakingAmount += _amount;
         emit DepositEvent(_amount, msg.sender);
     }
 
     // staker unStaking
     function unStaking(uint256 _amount) public {
-        require(_amount < stakers[msg.sender].stakingAmount, "not enough balance"); 
+        require(_amount < stakers[msg.sender].stakingAmount, "not enough balance");
         gpoolToken.safeTransfer(msg.sender, _amount);
         stakers[msg.sender].stakingAmount -= _amount;
+        stakers[msg.sender].lastUnStaking = block.timestamp;
+        if(stakers[msg.sender].stakingAmount == 0){
+            stakers[msg.sender].startStaking = 0;
+            stakers[msg.sender].lastUnStaking = 0;
+        }
         emit UnStakingEvent(_amount, msg.sender);
     }
 
@@ -206,8 +225,8 @@ contract GStakingManager is AccessControl {
     // update startTime, endTime of pool
     function updatePoolTime(
         uint256 _poolId,
-        uint32 _startTime,
-        uint32 _endTime
+        uint256 _startTime,
+        uint256 _endTime
     ) public {
         pools[_poolId].openTime = _startTime;
         pools[_poolId].closeTime = _endTime;
@@ -215,7 +234,7 @@ contract GStakingManager is AccessControl {
     }
 
     // get pool Info
-    function getPoolInfo(uint256 _poolId) public view returns(Pool memory){
+    function getPoolInfo(uint256 _poolId) public view returns (Pool memory) {
         return pools[_poolId];
     }
 
@@ -227,11 +246,11 @@ contract GStakingManager is AccessControl {
 
     // function getTier
     function getTier(address _staker) public view returns (Rank) {
-        StakerInfo memory staker = stakers[_staker]; 
+        StakerInfo memory staker = stakers[_staker];
         Rank rank = Rank.NORANK;
 
         // condition for bronze
-        if ( staker.startStaking == staker.lastUnStaking) {
+        if (staker.startStaking == staker.lastUnStaking) {
             rank = Rank.BRONZE;
         }
 
