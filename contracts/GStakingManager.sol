@@ -122,6 +122,9 @@ contract GStakingManager is AccessControl {
 
     // staker deposit
     function deposit(uint256 _amount) public {
+        require(gpoolToken.balanceOf(msg.sender) >= _amount, "not enough balance");
+        require(getBalance(msg.sender) >= CONDITION_AMOUNT, "not enough min condition 1000$ value");
+
         gpoolToken.safeTransferFrom(msg.sender, address(this), _amount);
         if(stakers[msg.sender].stakingAmount == 0){
             stakers[msg.sender].startStaking = block.timestamp;
@@ -141,6 +144,13 @@ contract GStakingManager is AccessControl {
             stakers[msg.sender].startStaking = 0;
             stakers[msg.sender].lastUnStaking = 0;
         }
+
+        // condition tracking
+        if(getBalance(msg.sender) < CONDITION_AMOUNT){
+            stakers[msg.sender].startStaking = 0;
+            stakers[msg.sender].lastUnStaking = 0;
+        }
+
         emit UnStakingEvent(_amount, msg.sender);
     }
 
@@ -273,8 +283,24 @@ contract GStakingManager is AccessControl {
     // user claim Reward
     function claimReward(uint256 _amount) public {
         require(getBalance(msg.sender) >= CONDITION_AMOUNT, "require min balance is 1000");
-
+    
         // todo
+
+        if(getTier(msg.sender) == Rank.NORANK){
+
+        }
+        
+        if(getTier(msg.sender) == Rank.BRONZE){
+            
+        }
+        
+        if(getTier(msg.sender) == Rank.SLIVER){
+            
+        }
+        
+        if(getTier(msg.sender) == Rank.GOLD){
+            
+        }
 
         emit ClaimRewardEvent(_amount, msg.sender);
     }
